@@ -128,22 +128,12 @@ window.Quarto = {
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
+    <a class="nav-link" href="../../posts/post1.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="../../about.html"> 
-<span class="menu-text">About</span></a>
-  </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Projects</span>
-    </span>
-  </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Posts</span>
-    </span>
-  </li>  
-  <li class="nav-item compact">
-    <a class="nav-link" href="../../post1.qmd"> 
-<span class="menu-text"></span></a>
+<span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-labs" role="link" data-bs-toggle="dropdown" aria-expanded="false">
@@ -185,6 +175,7 @@ window.Quarto = {
   </ul></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   <li><a href="#ai-prototype-summary" id="toc-ai-prototype-summary" class="nav-link" data-scroll-target="#ai-prototype-summary">AI Prototype Summary</a></li>
+  <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
   </ul>
 </nav>
     </div>
@@ -225,59 +216,107 @@ window.Quarto = {
 </header>
 
 
-<div class="callout callout-style-default callout-tip callout-titled" title="Annotated Report Template">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Annotated Report Template
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The following is a template to clarify what should be part of the writeup you post for each lab you complete. It is a sample report written to explain a simple FPGA blink demo. Each section contains a brief explanation of the purpose of the section and the information that should be included in it.</p>
-</div>
-</div>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>In this lab, we leveraged the FPGA aboard the MicroP’s Dev Board (which was soldered and constructed per instructions on the E155 site). The FPGA was designed logically to illuminate two LEDs (also present on the Dev Board) following AND or XOR logic from a 4-input DIP switch. Second, a third LED on the Dev Board was instructed to blink at 2.4 Hz. This was done using a clock divider and the 48 MHz high speed oscillator on the board. Finally, the 4-input DIP switch was also logically connected to a 7-segment display such that the binary input would display the corresponding hexadecimal digit on the display.</p>
+<p>In this lab, we leveraged the FPGA aboard the MicroP’s Dev Board (which was soldered and constructed per instructions on the E155 site). The FPGA was designed logically to illuminate two LEDs (also present on the Dev Board) following AND or XOR logic from a 4-input DIP switch. Second, a third LED on the Dev Board was instructed to blink at 2.4 Hz. This was done using a clock divider and the 48 MHz high speed oscillator on the board. Finally, the 4-input DIP switch was also logically connected to a 7-segment display such that the binary input would display the corresponding hexadecimal digit on the display. This lab took a total of 16 hours.</p>
 </section>
 <section id="design-and-testing-methodology" class="level2">
 <h2 class="anchored" data-anchor-id="design-and-testing-methodology">Design and Testing Methodology</h2>
 <p>The first logic to approach was the 2 LEDs following simple gate logic. To do this, I used assign statements corresponding to the pins and the gate logic. For the testing methodology, a testbench was made and simulated that would confirm all possible outputs of the logic were properly observed and the LEDs illuminated as expected. This same testbench was also used to confirm module connections occured and the on-board high-speed oscillator (<code>HSOSC</code>) from the iCE40 UltraPlus primitive library was generating a clock signal at 48 MHz.</p>
-<div class="callout callout-style-default callout-note callout-titled" title="Technical Documentation">
-<div class="callout-header d-flex align-content-center">
+<div class="callout callout-style-default callout-note callout-titled" title="Simple LED Gate Logic">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Technical Documentation
+<span class="screen-reader-only">Note</span>Simple LED Gate Logic
 </div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Include a link to a Git repository with your Verilog code, a block diagram of your design, and schematics of your circuits.</p>
+<pre><code>assign led[0] = s[1] ^ s[0]; //XOR logic for one LED
+assign led[1] = s[3] &amp; s[2]; //AND logic for another LED</code></pre>
+</div>
 </div>
 </div>
 <p>On the note of the high-speed oscillator, the int_osc generated by the top-level module was the used in a blinker submodule as a clock input. With this input, a clock divider was created to convert 48 MHz to 2.4 Hz. This was done with a counter that reset when the counter reached 10,000,000. By parameterizing the MAX count, we can then use an easier testing module. The module also includes “reset” and “en” input logic so after testing that with proper LED output, we generate a different clock and parameterize so MAX count is 3 in the testbench. This allows us to see that when MAX count is reached, the counter does reset to 0 and the LED does toggle.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Blinking Logic">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Blinking Logic
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>logic [WIDTH-1:0] counter = 1'b0; //initial state of counter
+
+// Simple clock divider
+always_ff @(posedge int_osc)
+    begin
+        if (counter &gt;= MAX) //The reason we want it to count up to this is because a 24 MHz clock divided by the trigger (10000000) as seen here to achieve 2.4 Hz
+            begin
+            counter &lt;= 0;
+            fpga_blink_out &lt;= ~fpga_blink_out;
+            end
+        else if (!reset)
+            begin
+                counter &lt;= 0;
+                fpga_blink_out &lt;= 0;
+            end
+        else begin
+            if (en) counter &lt;= counter + 1;
+        end
+    end</code></pre>
+</div>
+</div>
+</div>
 <p>Finally, the design logic for the seven segment display was implemented using an always_comb block with cases covering every 4-bit binary input and lighting up the relevant segments to create the hexadecimal digit. The seven bit output simply followings A-G segments as defined in the E155 logic to toggle segments. To test this, I covered all 16 cases and asserted the logical outputs and it passed with flying colors! (get it?)</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Seven Segment Combinational Logic">
-<div class="callout-header d-flex align-content-center">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
 <span class="screen-reader-only">Note</span>Seven Segment Combinational Logic
 </div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>’</p>
-<p>’</p>
+<pre><code>always_comb
+    begin
+        case(s)
+            4'b0000: seg = 7'b0000001; //0
+            4'b0001: seg = 7'b1001111; //1
+            4'b0010: seg = 7'b0010010; //2
+            4'b0011: seg = 7'b0000110; //3
+            4'b0100: seg = 7'b1001100; //4
+            4'b0101: seg = 7'b0100100; //5
+            4'b0110: seg = 7'b0100000; //6
+            4'b0111: seg = 7'b0001111; //7
+            4'b1000: seg = 7'b0000000; //8
+            4'b1001: seg = 7'b0000100; //9
+            4'b1010: seg = 7'b0001000; //A
+            4'b1011: seg = 7'b1100000; //B
+            4'b1100: seg = 7'b0110001; //C
+            4'b1101: seg = 7'b1000010; //D
+            4'b1110: seg = 7'b0110000; //E
+            4'b1111: seg = 7'b0111000; //F
+            default: seg = 7'b1111111; //default case
+        endcase
+    end</code></pre>
+</div>
 </div>
 </div>
 </section>
 <section id="technical-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="technical-documentation">Technical Documentation:</h2>
-<p>The source code for the project can be found in the associated <a href="https://github.com/HMC-E155/fpga-blink-test-demo">Github repository</a>.</p>
+<p>The source code for the project can be found in the associated <a href="https://github.com/EduardoAmbrizLazo/e155-lab1/tree/main/fpga">Github repository</a>.</p>
 <section id="block-diagram" class="level3">
 <h3 class="anchored" data-anchor-id="block-diagram">Block Diagram</h3>
 <div id="fig-block-diagram" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -290,7 +329,7 @@ Figure&nbsp;1: Block diagram of the Verilog design.
 </figcaption>
 </figure>
 </div>
-<p>The block diagram in <a href="#fig-block-diagram" class="quarto-xref">Figure&nbsp;1</a> demonstrates the overall architecture of the design. The top-level module <code>top</code> includes two submodules: the high-speed oscillator block (<code>HSOSC</code>) and the clock divider module (<code>clk_divider</code>). Every net and port in the block diagram must be labeled – that means each wire at the top level has to have a name, and the connection to a submodule must show the name inside the module. This is true even if the submodule port name is the same as the top level net name.</p>
+<p>The block diagram in <a href="#fig-block-diagram" class="quarto-xref">Figure&nbsp;1</a> demonstrates the overall architecture of the design. The top-level module <code>lab1_ea</code> includes two submodules: the blinker/counter for the 2.4 Hz LED (<code>blinker</code>) and the 7-segment display logic module (<code>decoder</code>).</p>
 </section>
 <section id="schematic" class="level3">
 <h3 class="anchored" data-anchor-id="schematic">Schematic</h3>
@@ -304,7 +343,7 @@ Figure&nbsp;2: Schematic of the physical circuit.
 </figcaption>
 </figure>
 </div>
-<p><a href="#fig-schematic" class="quarto-xref">Figure&nbsp;2</a> shows the physical layout of the design. An internal 100 k<span class="math inline">\(\Omega\)</span> pullup resistor was used to ensure the active low reset pin was not floating. The output LED was connected using a 1 k<span class="math inline">\(\Omega\)</span> current-limiting resistor to ensure the output current (~2.6 mA) did not exceed the maximum output current of the FPGA I/O pins.</p>
+<p><a href="#fig-schematic" class="quarto-xref">Figure&nbsp;2</a> shows the physical layout of the design. The FPGA communicates with on-board LEDs and the seven-segment display via a network of 150 k<span class="math inline">\(\Omega\)</span> resistors. This value was found by subtracting the 2V voltage drop from 3.3 V input voltage and dividing by the expected 10 mA. This results in about 120 ohms. A reset push button is also present.</p>
 </section>
 </section>
 <section id="results-and-discussion" class="level2">
@@ -312,39 +351,62 @@ Figure&nbsp;2: Schematic of the physical circuit.
 <p>The overall design and construction was successful as confirmed via simulation (incoming) and through the physical circuitry. I was able to oscilloscope 2.4 Hz and observe the proper LED gate logic on the Dev Board. Furthermore, the seven-segment display does display the proper hexadecimal digit.</p>
 <section id="testbench-simulation" class="level3">
 <h3 class="anchored" data-anchor-id="testbench-simulation">Testbench Simulation</h3>
-<div id="fig-testbench" class="quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-testbench1" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-testbench-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/testbench-screenshot.png" class="img-fluid figure-img">
+<div aria-describedby="fig-testbench1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/testbench1-screenshot.png" class="img-fluid figure-img">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the blinking output signal. Note that the timescale for the clock divider was modified to divide by 4.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the top-level module properly calling on submodules, the HSOSC int_osc toggling, and the proper LED gate logic.
 </figcaption>
 </figure>
 </div>
-<p>The design met all intended design objectives. <a href="#fig-testbench" class="quarto-xref">Figure&nbsp;3</a> shows a screenshot of the QuestaSim simulation. If a more precise output frequency was desired, a more sophisticated counter could be developed. The current design only allows for the clock to be divided by powers of two.</p>
+<p>The design met all intended design objectives. <a href="#fig-testbench1" class="quarto-xref">Figure&nbsp;3</a> shows a screenshot of the QuestaSim simulation.</p>
+<div id="fig-testbench2" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-testbench2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/testbench2-screenshot.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: A screenshot of a QuestaSim simulation demonstrating the blinker submodule testing whether reset and enable works and verifying we get fpga_blink_out to properly trigger after the expected number of ns for the parameterized counter.
+</figcaption>
+</figure>
+</div>
+<p>The design met all intended design objectives. <a href="#fig-testbench2" class="quarto-xref">Figure&nbsp;4</a> shows a screenshot of the QuestaSim simulation.</p>
+<div id="fig-testbench3" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-testbench3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/testbench3-screenshot.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: A screenshot of a QuestaSim simulation demonstrating the decoder submodule
+</figcaption>
+</figure>
+</div>
+<p>The design met all intended design objectives. <a href="#fig-testbench3" class="quarto-xref">Figure&nbsp;5</a> shows a screenshot of the QuestaSim simulation.</p>
 </section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<div class="callout callout-style-default callout-note callout-titled" title="Conclusion">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Conclusion
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Briefly summarize what was done and how it performed. Also note how many hours you spent working on the lab.</p>
-</div>
-</div>
-<p>The design successfully blinked an external LED using the on-board high-speed oscillator. I spent a total of two hours working on this lab.</p>
+<p>The design successfully programmed the 7-segment display and outputted the right LED logic. I learned a lot about testbenches, communication between modules, etc.</p>
 </section>
 <section id="ai-prototype-summary" class="level2">
 <h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
-<p>Include generated code, easy-to-read chat transcripts, and a reflection on how well it worked.</p>
+<div id="fig-aisynthesis" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-aisynthesis-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/aisynthesis-screenshot.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-aisynthesis-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: A screenshot of a the synthesis of the logic the AI created.
+</figcaption>
+</figure>
+</div>
+<p>It did successfully synthesize on the first go but I noticed some unusual and the variables were strangely defined. The logic and comments are extremely helpful and I can see how this can be used as a very valuable tool but I’m also not quite sure if this would be helpful since a person using this for multiple modules might be confused when communicating with other modules. <a href="#fig-aisynthesis" class="quarto-xref">Figure&nbsp;6</a> shows a screenshot of the synthesis.</p>
+</section>
+<section id="resources" class="level2">
+<h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<p>The source code for the project can be found in the associated <a href="https://github.com/EduardoAmbrizLazo/e155-lab1/tree/main/fpga">Github repository</a>.</p>
 
 
 </section>

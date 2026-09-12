@@ -7,10 +7,8 @@ website:
     left:
       - href: index.qmd
         text: Home
+      - href: posts\post1.qmd
       - href: about.qmd
-      - text: Projects
-      - text: Posts
-      - href: post1.qmd
       - text: Labs
         menu:
           - text: Lab 1
