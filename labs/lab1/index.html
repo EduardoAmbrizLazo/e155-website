@@ -35,16 +35,24 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../">
+<link href="../../images/knight.jpg" rel="icon" type="image/jpeg">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ff6db9826b2d993648c24e5ed52e3772.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-e11e00719057c7794e3e5cb159c51506.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e11e00719057c7794e3e5cb159c51506.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-e11e00719057c7794e3e5cb159c51506.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -127,9 +135,9 @@ window.Quarto = {
     <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
-  <li class="nav-item compact">
-    <a class="nav-link" href="../../posts1.qmd"> 
-<span class="menu-text"></span></a>
+  <li class="nav-item">
+    <a class="nav-link" href="../../Posts/post1.html"> 
+<span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../../about.html"> 
@@ -322,7 +330,7 @@ always_ff @(posedge int_osc)
 <div id="fig-block-diagram" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-block-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/block-diagram.png" class="img-fluid figure-img">
+<a href="images/block-diagram.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;1: Block diagram of the Verilog design."><img src="images/block-diagram.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-block-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: Block diagram of the Verilog design.
@@ -336,7 +344,7 @@ Figure&nbsp;1: Block diagram of the Verilog design.
 <div id="fig-schematic" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-schematic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/schematic.png" class="img-fluid figure-img">
+<a href="images/schematic.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: Schematic of the physical circuit."><img src="images/schematic.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-schematic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Schematic of the physical circuit.
@@ -354,7 +362,7 @@ Figure&nbsp;2: Schematic of the physical circuit.
 <div id="fig-testbench1" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-testbench1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/testbench1-screenshot.png" class="img-fluid figure-img">
+<a href="images/testbench1-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the top-level module properly calling on submodules, the HSOSC int_osc toggling, and the proper LED gate logic."><img src="images/testbench1-screenshot.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the top-level module properly calling on submodules, the HSOSC int_osc toggling, and the proper LED gate logic.
@@ -365,7 +373,7 @@ Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the top-leve
 <div id="fig-testbench2" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-testbench2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/testbench2-screenshot.png" class="img-fluid figure-img">
+<a href="images/testbench2-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;4: A screenshot of a QuestaSim simulation demonstrating the blinker submodule testing whether reset and enable works and verifying we get fpga_blink_out to properly trigger after the expected number of ns for the parameterized counter."><img src="images/testbench2-screenshot.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;4: A screenshot of a QuestaSim simulation demonstrating the blinker submodule testing whether reset and enable works and verifying we get fpga_blink_out to properly trigger after the expected number of ns for the parameterized counter.
@@ -376,7 +384,7 @@ Figure&nbsp;4: A screenshot of a QuestaSim simulation demonstrating the blinker 
 <div id="fig-testbench3" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-testbench3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/testbench3-screenshot.png" class="img-fluid figure-img">
+<a href="images/testbench3-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;5: A screenshot of a QuestaSim simulation demonstrating the decoder submodule"><img src="images/testbench3-screenshot.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;5: A screenshot of a QuestaSim simulation demonstrating the decoder submodule
@@ -395,7 +403,7 @@ Figure&nbsp;5: A screenshot of a QuestaSim simulation demonstrating the decoder 
 <div id="fig-aisynthesis" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-aisynthesis-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/aisynthesis-screenshot.png" class="img-fluid figure-img">
+<a href="images/aisynthesis-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;6: A screenshot of a the synthesis of the logic the AI created."><img src="images/aisynthesis-screenshot.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-aisynthesis-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;6: A screenshot of a the synthesis of the logic the AI created.
@@ -815,6 +823,38 @@ Figure&nbsp;6: A screenshot of a the synthesis of the logic the AI created.
   });
   </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
 
 
 
