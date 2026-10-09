@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Eduardo Ambriz Lazo">
-<meta name="dcterms.date" content="2026-09-09">
+<meta name="dcterms.date" content="2026-09-30">
 
-<title>FPGA and MCU Setup and Testing – My Portfolio</title>
+<title>Digital Audio – My Portfolio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -190,13 +190,9 @@ window.Quarto = {
   <li><a href="#design-and-testing-methodology" id="toc-design-and-testing-methodology" class="nav-link" data-scroll-target="#design-and-testing-methodology">Design and Testing Methodology</a></li>
   <li><a href="#technical-documentation" id="toc-technical-documentation" class="nav-link" data-scroll-target="#technical-documentation">Technical Documentation:</a>
   <ul class="collapse">
-  <li><a href="#block-diagram" id="toc-block-diagram" class="nav-link" data-scroll-target="#block-diagram">Block Diagram</a></li>
   <li><a href="#schematic" id="toc-schematic" class="nav-link" data-scroll-target="#schematic">Schematic</a></li>
   </ul></li>
-  <li><a href="#results-and-discussion" id="toc-results-and-discussion" class="nav-link" data-scroll-target="#results-and-discussion">Results and Discussion</a>
-  <ul class="collapse">
-  <li><a href="#testbench-simulation" id="toc-testbench-simulation" class="nav-link" data-scroll-target="#testbench-simulation">Testbench Simulation</a></li>
-  </ul></li>
+  <li><a href="#results-and-discussion" id="toc-results-and-discussion" class="nav-link" data-scroll-target="#results-and-discussion">Results and Discussion</a></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   <li><a href="#ai-prototype-summary" id="toc-ai-prototype-summary" class="nav-link" data-scroll-target="#ai-prototype-summary">AI Prototype Summary</a></li>
   <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
@@ -208,7 +204,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">FPGA and MCU Setup and Testing</h1>
+<h1 class="title">Digital Audio</h1>
   <div class="quarto-categories">
     <div class="quarto-category">Lab Report</div>
   </div>
@@ -228,7 +224,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 9, 2026</p>
+      <p class="date">September 30, 2026</p>
     </div>
   </div>
   
@@ -242,197 +238,325 @@ window.Quarto = {
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>In this lab, we leveraged the FPGA aboard the MicroP’s Dev Board (which was soldered and constructed per instructions on the E155 site). The FPGA was designed logically to illuminate two LEDs (also present on the Dev Board) following AND or XOR logic from a 4-input DIP switch. Second, a third LED on the Dev Board was instructed to blink at 2.4 Hz. This was done using a clock divider and the 48 MHz high speed oscillator on the board. Finally, the 4-input DIP switch was also logically connected to a 7-segment display such that the binary input would display the corresponding hexadecimal digit on the display. This lab took a total of 16 hours.</p>
+<p>In this lab, we leveraged the MCU aboard the MicroP’s Dev Board, particularly the STM32L4xx model. Utilizing this, we’re able to control the timer logic to function like a counter in order to trigger an output at a certain frequency. This is done via the TIM2 register built into the MCU as well as initiating the GPIO B pins to output a signal that powers a speaker at the desired frequency. With all these puzzle pieces, we can have the speaker play an array of notes and make a tune.</p>
+<p><em>I spent approximately 14 hours in this lab all together including familiarizing myself with the idea and a whole lot of debugging</em></p>
 </section>
 <section id="design-and-testing-methodology" class="level2">
 <h2 class="anchored" data-anchor-id="design-and-testing-methodology">Design and Testing Methodology</h2>
-<p>The first logic to approach was the 2 LEDs following simple gate logic. To do this, I used assign statements corresponding to the pins and the gate logic. For the testing methodology, a testbench was made and simulated that would confirm all possible outputs of the logic were properly observed and the LEDs illuminated as expected. This same testbench was also used to confirm module connections occured and the on-board high-speed oscillator (<code>HSOSC</code>) from the iCE40 UltraPlus primitive library was generating a clock signal at 48 MHz.</p>
-<div class="callout callout-style-default callout-note callout-titled" title="Simple LED Gate Logic">
+<p>Using SEGGER Embedded Studio, the logic of this lab was contained in a header file and a main file. The header file is essentially a library pointing to the addresses of the MCU so the main logic can leverage several registers. The ones of note for this lab are the RCC, TIM2, and GPIOB register.</p>
+<p>There are many timers onboard the MCU but TIM2 has 32 bits and is generally recommended so overflow doesn’t occur and we can create a constant (via PSC) to specify our frequency through altering the ARR and SRC.</p>
+<p>Naturally, we want a system that can relate pitch and duration to timer configurations and that can create 220 Hz and 1000 Hz pitches within 1% accuracy. A lot of calculations are involved in this analysis but logically:</p>
+<p>MAX DURATION</p>
+<p>For maximum delay/duration, the delay is the inverse of frequency (T = 1/f). Using our maximum frequency to get the maximum number, we do 1/(1.164 x 10^-5 Hz) which is 85,900 seconds or 23.86 hours.</p>
+<p>MIN DURATION</p>
+<p>For minumum the same principle applies but instead we do 1/(25kHz) which means the minimum delay would be about 40 microseconds.</p>
+<p>MINIMUM FREQUENCY</p>
+<p>The timer frequency is derived by f_out=(f_clk)/(2(PSC+1)(ARR+1)). The dividing by 2 is due to the nature of toggling. This is why the code uses 20MHz rather than 40MHz. Given that f_clk = 40 MHz and PSC=39, the denominator is 80(ARR+1) and we should set ARR to (2^32)-1.</p>
+<p>Therefore, f_min=(40MHz)/(80(2^32)) or 1.164 x 10^-5 Hz</p>
+<p>MAX FREQUENCY</p>
+<p>Referring to the code below, since PSC = 39, let’s say the code has already set the Auto-Reload Register (ARR). For the case in the maximum frequency, ARR should be equal to 1. Using the equation above:</p>
+<p>f_max=(40MHz)/(160)= 25 kHz</p>
+<p>VERIFY 1% FREQUENCY ACCURACY</p>
+<p>To be accurate, we must minimize error. What IS error in this application? Error is defined by the way ARR rounds so relative error Epsilon = 1/(2(ARR+1))</p>
+<p>To satisfy Epsilon &lt;= 0.01, this means that 1/(2(ARR+1)) &lt;= 0.01. Meaning ARR+1 &gt;= 50, meaning ARR &gt;= 49.</p>
+<p>In Resources below, I linked the formula for the Desmos calculations but to verify for 1000 Hz and 220 Hz:</p>
+<p>f = 1000 Hz</p>
+<p>ARR = 2000000/(40(1000)) - 1 = 49 and since 49 &gt;= 49, the 1000 Hz note is definitely within 1% accuracy.</p>
+<p>f = 220</p>
+<p>ARR = 2000000/(40(220)) - 1 = 226.273 and since 226.273 &gt;= 49, the 1000 Hz note is definitely within 1% accuracy.</p>
+<p>Additional frequencies and their ARR values are in the Desmos calculator.</p>
+<p>The reason that 220 and 1000 are not sufficient is because ARR is a constant and every frequency value evaluated against it would have a different remainder to account for. This means it can’t be cleanly divided and it’s possible a frequency could end up off and so error must be evaluated across every note between 220 Hz and 1000 Hz.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Main Logic">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Simple LED Gate Logic
+<span class="screen-reader-only">Note</span>Main Logic
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<pre><code>assign led[0] = s[1] ^ s[0]; //XOR logic for one LED
-assign led[1] = s[3] &amp; s[2]; //AND logic for another LED</code></pre>
+<pre><code>// lab4_ea_main.c
+// Fur Elise, E155 Lab 4
+
+#include &lt;stdint.h&gt;
+#include "definitionlibrary.h"
+
+#define SPK 3 //Bonus is that PB3 is also used for LD3 so we blink to the tune
+
+// Pitch in Hz, duration in ms
+const int notes[][2] = {
+{Pretend there's a series of notes and durations here, condensed for readability}};
+
+
+
+void delay(uint32_t ms) {
+    TIM2_reg-&gt;ARR = 2000000/(1000*(40))-1; //default delay will be 1000 Hz
+    TIM2_reg-&gt;CNT = 0;
+    for (int i = 1; i &lt;= ms; i++) {
+     while(!(TIM2_reg-&gt;SR &amp; 1)) {}
+    TIM2_reg-&gt;SR &amp;= ~(1&lt;&lt;0);
+    }
+}
+
+void play(int frq, int ms) {
+    TIM2_reg-&gt;ARR = 2000000/(frq*(40))-1;
+    TIM2_reg-&gt;CNT = 0;
+        for (uint32_t i = 1; i &lt;= ms; i++) {
+        while(!(TIM2_reg-&gt;SR &amp; 1)) {}
+        TIM2_reg-&gt;SR &amp;= ~(1&lt;&lt;0);
+        GPIOB_reg-&gt;ODR ^= (1&lt;&lt;SPK);
+        }
+}
+
+void lay(int ms) {        //get it? lay as in rest?
+    TIM2_reg-&gt;CR1 &amp;= ~0x01; //Disable Timer since that's the CEN bit
+    GPIOB_reg-&gt;ODR = ~(1 &lt;&lt; SPK);
+    delay(ms);
+}
+
+
+int main(void) {
+
+    int i = 0;
+
+    RCC_reg-&gt;AHB2ENR |= (1 &lt;&lt; 1); //Bit 1 is GPIOBEN, fits our GPIO B specs
+    RCC_reg-&gt;APB1ENR1 |= (1 &lt;&lt; 0); //Bit 0 is TIM2EN
+
+    GPIOB_reg-&gt;MODER &amp;= ~(3 &lt;&lt; (SPK * 2)); //Speaker general purpose output
+    GPIOB_reg-&gt;MODER |= (1 &lt;&lt; (SPK * 2));
+
+    TIM2_reg-&gt;PSC = 39;  //Prescaler divider const. for frequency calcs 
+    TIM2_reg-&gt;CR1 |= 1; //CEN as specified before
+
+    while(!(notes[i][0] == 0 &amp;&amp; notes[i][1] == 0)) {
+        int frq = notes[i][0]; //assigning freq to the first element
+        int del = notes[i][1]; //assigning delay duration to second element
+        if (frq == 0) {
+        //lay(del);
+        delay(del*2);
+    }
+    else {
+        uint32_t ms = frq*del/500;
+        play(frq, ms*0.80);
+        //TIM2_reg-&gt;CR1 |= (1 &lt;&lt; 0); //Enable CEN
+        delay(ms);
+    }
+    i++;
+    GPIOB_reg-&gt;ODR = ~(1 &lt;&lt; SPK); //Toggling to create the square wave
+    }
+}</code></pre>
 </div>
 </div>
 </div>
-<p>On the note of the high-speed oscillator, the int_osc generated by the top-level module was the used in a blinker submodule as a clock input. With this input, a clock divider was created to convert 48 MHz to 2.4 Hz. This was done with a counter that reset when the counter reached 10,000,000. By parameterizing the MAX count, we can then use an easier testing module. The module also includes “reset” and “en” input logic so after testing that with proper LED output, we generate a different clock and parameterize so MAX count is 3 in the testbench. This allows us to see that when MAX count is reached, the counter does reset to 0 and the LED does toggle.</p>
-<div class="callout callout-style-default callout-note callout-titled" title="Blinking Logic">
+<p>For more context on the signals within each register (i.e.&nbsp;GPIOB_reg-&gt;ODR), the library I made below can illuminate that and the STM32L4 reference manual can provide more context.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="definitionlibrary.h">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Blinking Logic
+<span class="screen-reader-only">Note</span>definitionlibrary.h
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<pre><code>logic [WIDTH-1:0] counter = 1'b0; //initial state of counter
+<pre><code>// definitionlibrary.h
+// Header for Digital Audio Lab functions
 
-// Simple clock divider
-always_ff @(posedge int_osc)
-    begin
-        if (counter &gt;= MAX) //The reason we want it to count up to this is because a 24 MHz clock divided by the trigger (10000000) as seen here to achieve 2.4 Hz
-            begin
-            counter &lt;= 0;
-            fpga_blink_out &lt;= ~fpga_blink_out;
-            end
-        else if (!reset)
-            begin
-                counter &lt;= 0;
-                fpga_blink_out &lt;= 0;
-            end
-        else begin
-            if (en) counter &lt;= counter + 1;
-        end
-    end</code></pre>
-</div>
-</div>
-</div>
-<p>Finally, the design logic for the seven segment display was implemented using an always_comb block with cases covering every 4-bit binary input and lighting up the relevant segments to create the hexadecimal digit. The seven bit output simply followings A-G segments as defined in the E155 logic to toggle segments. To test this, I covered all 16 cases and asserted the logical outputs and it passed with flying colors! (get it?)</p>
-<div class="callout callout-style-default callout-note callout-titled" title="Seven Segment Combinational Logic">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Seven Segment Combinational Logic
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<pre><code>always_comb
-    begin
-        case(s)
-            4'b0000: seg = 7'b0000001; //0
-            4'b0001: seg = 7'b1001111; //1
-            4'b0010: seg = 7'b0010010; //2
-            4'b0011: seg = 7'b0000110; //3
-            4'b0100: seg = 7'b1001100; //4
-            4'b0101: seg = 7'b0100100; //5
-            4'b0110: seg = 7'b0100000; //6
-            4'b0111: seg = 7'b0001111; //7
-            4'b1000: seg = 7'b0000000; //8
-            4'b1001: seg = 7'b0000100; //9
-            4'b1010: seg = 7'b0001000; //A
-            4'b1011: seg = 7'b1100000; //B
-            4'b1100: seg = 7'b0110001; //C
-            4'b1101: seg = 7'b1000010; //D
-            4'b1110: seg = 7'b0110000; //E
-            4'b1111: seg = 7'b0111000; //F
-            default: seg = 7'b1111111; //default case
-        endcase
-    end</code></pre>
+#ifndef STM32L4_TIM2_H
+#define STM32L4_TIM2_H
+
+
+#include &lt;stdint.h&gt; // Include stdint header
+
+//Pg. 396 TIM2 stuff
+//Pg. 70 Memory Map and Register Offsets
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Definitions
+///////////////////////////////////////////////////////////////////////////////
+
+// Timer register structs here
+typedef struct {
+volatile uint32_t CR1;   // Power Control Register STOP/START
+volatile uint32_t OTYPER;  // TIM2 Offset 0x04
+volatile uint32_t OSPEEDR; // TIM2 Offset 0x08
+volatile uint32_t DIER;  // GPIO Offset 0x0C
+volatile uint32_t SR;     // GPIO Offset 0x10
+volatile uint32_t ODR;     // GPIO Offset 0x14
+volatile uint32_t BSRR;    // GPIO Offset 0x18
+volatile uint32_t LCKR;    // GPIO Offset 0x1C
+volatile uint32_t AFRL;    // GPIO Offset 0x20
+volatile uint32_t CNT;    // GPIO Offset 0x24
+volatile uint32_t PSC;
+volatile uint32_t ARR;
+} TIM2;
+#define TIM2_reg ((TIM2 *) 0x40000000UL)
+#endif
+
+#ifndef STM32L4_GPIOB_H
+#define STM32L4_GPIOB_H
+
+#include &lt;stdint.h&gt; // Include stdint header
+
+// GPIOB register structs here
+typedef struct {
+volatile uint32_t MODER;   // GPIO Offset 0x00 GPIO port mode register
+volatile uint32_t OTYPER;  // GPIO Offset 0x04
+volatile uint32_t OSPEEDR; // GPIO Offset 0x08
+volatile uint32_t PURPDR;  // GPIO Offset 0x0C
+volatile uint32_t IDR;     // GPIO Offset 0x10
+volatile uint32_t ODR;     // GPIO Offset 0x14
+volatile uint32_t BSRR;    // GPIO Offset 0x18
+volatile uint32_t LCKR;    // GPIO Offset 0x1C
+volatile uint32_t AFRL;    // GPIO Offset 0x20
+volatile uint32_t AFRH;    // GPIO Offset 0x24
+} GPIOB;
+#define GPIOB_reg ((GPIOB *) 0x48000400UL)
+
+#endif
+
+#ifndef STM32L4_RCC_H
+#define STM32L4_RCC_H
+
+#include &lt;stdint.h&gt; // Include stdint header
+
+// Base addresses
+#define RCC_BASE (0x40021000UL) // base address of RCC
+
+// PLL
+#define PLLSRC_HSI 0
+#define PLLSRC_HSE 1
+
+// Clock configuration
+#define SW_HSI  0
+#define SW_HSE  1
+#define SW_PLL  2
+#define __IO volatile
+
+/**
+* @brief Reset and Clock Control
+*/
+
+typedef struct
+{
+__IO uint32_t CR;          /*!&lt; RCC clock control register,                                              Address offset: 0x00 */
+__IO uint32_t ICSCR;       /*!&lt; RCC internal clock sources calibration register,                         Address offset: 0x04 */
+__IO uint32_t CFGR;        /*!&lt; RCC clock configuration register,                                        Address offset: 0x08 */
+__IO uint32_t PLLCFGR;     /*!&lt; RCC system PLL configuration register,                                   Address offset: 0x0C */
+__IO uint32_t PLLSAI1CFGR; /*!&lt; RCC PLL SAI1 configuration register,                                     Address offset: 0x10 */
+uint32_t      RESERVED;    /*!&lt; Reserved,                                                                Address offset: 0x14 */
+__IO uint32_t CIER;        /*!&lt; RCC clock interrupt enable register,                                     Address offset: 0x18 */
+__IO uint32_t CIFR;        /*!&lt; RCC clock interrupt flag register,                                       Address offset: 0x1C */
+__IO uint32_t CICR;        /*!&lt; RCC clock interrupt clear register,                                      Address offset: 0x20 */
+uint32_t      RESERVED0;   /*!&lt; Reserved,                                                                Address offset: 0x24 */
+__IO uint32_t AHB1RSTR;    /*!&lt; RCC AHB1 peripheral reset register,                                      Address offset: 0x28 */
+__IO uint32_t AHB2RSTR;    /*!&lt; RCC AHB2 peripheral reset register,                                      Address offset: 0x2C */
+__IO uint32_t AHB3RSTR;    /*!&lt; RCC AHB3 peripheral reset register,                                      Address offset: 0x30 */
+uint32_t      RESERVED1;   /*!&lt; Reserved,                                                                Address offset: 0x34 */
+__IO uint32_t APB1RSTR1;   /*!&lt; RCC APB1 peripheral reset register 1,                                    Address offset: 0x38 */
+__IO uint32_t APB1RSTR2;   /*!&lt; RCC APB1 peripheral reset register 2,                                    Address offset: 0x3C */
+__IO uint32_t APB2RSTR;    /*!&lt; RCC APB2 peripheral reset register,                                      Address offset: 0x40 */
+uint32_t      RESERVED2;   /*!&lt; Reserved,                                                                Address offset: 0x44 */
+__IO uint32_t AHB1ENR;     /*!&lt; RCC AHB1 peripheral clocks enable register,                              Address offset: 0x48 */
+__IO uint32_t AHB2ENR;     /*!&lt; RCC AHB2 peripheral clocks enable register,                              Address offset: 0x4C */   
+__IO uint32_t AHB3ENR;     /*!&lt; RCC AHB3 peripheral clocks enable register,                              Address offset: 0x50 */
+uint32_t      RESERVED3;   /*!&lt; Reserved,                                                                Address offset: 0x54 */
+__IO uint32_t APB1ENR1;    /*!&lt; RCC APB1 peripheral clocks enable register 1,                            Address offset: 0x58 */
+__IO uint32_t APB1ENR2;    /*!&lt; RCC APB1 peripheral clocks enable register 2,                            Address offset: 0x5C */
+__IO uint32_t APB2ENR;     /*!&lt; RCC APB2 peripheral clocks enable register,                              Address offset: 0x60 */
+uint32_t      RESERVED4;   /*!&lt; Reserved,                                                                Address offset: 0x64 */
+__IO uint32_t AHB1SMENR;   /*!&lt; RCC AHB1 peripheral clocks enable in sleep and stop modes register,      Address offset: 0x68 */
+__IO uint32_t AHB2SMENR;   /*!&lt; RCC AHB2 peripheral clocks enable in sleep and stop modes register,      Address offset: 0x6C */
+__IO uint32_t AHB3SMENR;   /*!&lt; RCC AHB3 peripheral clocks enable in sleep and stop modes register,      Address offset: 0x70 */
+uint32_t      RESERVED5;   /*!&lt; Reserved,                                                                Address offset: 0x74 */
+__IO uint32_t APB1SMENR1;  /*!&lt; RCC APB1 peripheral clocks enable in sleep mode and stop modes register 1, Address offset: 0x78 */
+__IO uint32_t APB1SMENR2;  /*!&lt; RCC APB1 peripheral clocks enable in sleep mode and stop modes register 2, Address offset: 0x7C */
+__IO uint32_t APB2SMENR;   /*!&lt; RCC APB2 peripheral clocks enable in sleep mode and stop modes register, Address offset: 0x80 */
+uint32_t      RESERVED6;   /*!&lt; Reserved,                                                                Address offset: 0x84 */
+__IO uint32_t CCIPR;       /*!&lt; RCC peripherals independent clock configuration register,                Address offset: 0x88 */
+uint32_t      RESERVED7;   /*!&lt; Reserved,                                                                Address offset: 0x8C */
+__IO uint32_t BDCR;        /*!&lt; RCC backup domain control register,                                      Address offset: 0x90 */
+__IO uint32_t CSR;         /*!&lt; RCC clock control &amp; status register,                                     Address offset: 0x94 */
+__IO uint32_t CRRCR;       /*!&lt; RCC clock recovery RC register,                                          Address offset: 0x98 */
+} RCC_TypeDef;
+
+#define RCC_reg ((RCC_TypeDef *) RCC_BASE)
+
+#endif</code></pre>
 </div>
 </div>
 </div>
 </section>
 <section id="technical-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="technical-documentation">Technical Documentation:</h2>
-<p>The source code for the project can be found in the associated <a href="https://github.com/EduardoAmbrizLazo/e155-lab1/tree/main/fpga">Github repository</a>.</p>
-<section id="block-diagram" class="level3">
-<h3 class="anchored" data-anchor-id="block-diagram">Block Diagram</h3>
-<div id="fig-block-diagram" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-block-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="images/block-diagram.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;1: Block diagram of the Verilog design."><img src="images/block-diagram.png" class="img-fluid figure-img"></a>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-block-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Block diagram of the Verilog design.
-</figcaption>
-</figure>
-</div>
-<p>The block diagram in <a href="#fig-block-diagram" class="quarto-xref">Figure&nbsp;1</a> demonstrates the overall architecture of the design. The top-level module <code>lab1_ea</code> includes two submodules: the blinker/counter for the 2.4 Hz LED (<code>blinker</code>) and the 7-segment display logic module (<code>decoder</code>).</p>
-</section>
+<p>The source code for the project can be found in the associated <a href="https://github.com/EduardoAmbrizLazo/e155-labs/tree/main/fpga/lab2_ea/lab2_ea/source/impl_1">Github repository</a>.</p>
 <section id="schematic" class="level3">
 <h3 class="anchored" data-anchor-id="schematic">Schematic</h3>
 <div id="fig-schematic" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-schematic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="images/schematic.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: Schematic of the physical circuit."><img src="images/schematic.png" class="img-fluid figure-img"></a>
+<a href="images/lab4_schematic.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;1: Figure: Schematic of the physical circuit including audio amplifier, speaker, and potentiometer."><img src="images/lab4_schematic.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-schematic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Schematic of the physical circuit.
+Figure&nbsp;1: Figure: Schematic of the physical circuit including audio amplifier, speaker, and potentiometer.
 </figcaption>
 </figure>
 </div>
-<p><a href="#fig-schematic" class="quarto-xref">Figure&nbsp;2</a> shows the physical layout of the design. The FPGA communicates with on-board LEDs and the seven-segment display via a network of 150 k<span class="math inline">\(\Omega\)</span> resistors. This value was found by subtracting the 2V voltage drop from 3.3 V input voltage and dividing by the expected 10 mA. This results in about 120 ohms. A reset push button is also present.</p>
+<p><a href="#fig-schematic" class="quarto-xref">Figure&nbsp;1</a> shows the electical layout of the design. Since our output can’t necessarily drive a speaker, an audio amplifier is needed for the speaker to properly read the GPIO output. Additionally, a potentiometer serves as volume control.</p>
 </section>
 </section>
 <section id="results-and-discussion" class="level2">
 <h2 class="anchored" data-anchor-id="results-and-discussion">Results and Discussion</h2>
-<p>The overall design and construction was successful as confirmed via simulation (incoming) and through the physical circuitry. I was able to oscilloscope 2.4 Hz and observe the proper LED gate logic on the Dev Board. Furthermore, the seven-segment display does display the proper hexadecimal digit.</p>
-<section id="testbench-simulation" class="level3">
-<h3 class="anchored" data-anchor-id="testbench-simulation">Testbench Simulation</h3>
-<div id="fig-testbench1" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-testbench1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="images/testbench1-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the top-level module properly calling on submodules, the HSOSC int_osc toggling, and the proper LED gate logic."><img src="images/testbench1-screenshot.png" class="img-fluid figure-img"></a>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: A screenshot of a QuestaSim simulation demonstrating the top-level module properly calling on submodules, the HSOSC int_osc toggling, and the proper LED gate logic.
-</figcaption>
-</figure>
-</div>
-<p>The design met all intended design objectives. <a href="#fig-testbench1" class="quarto-xref">Figure&nbsp;3</a> shows a screenshot of the QuestaSim simulation.</p>
-<div id="fig-testbench2" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-testbench2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="images/testbench2-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;4: A screenshot of a QuestaSim simulation demonstrating the blinker submodule testing whether reset and enable works and verifying we get fpga_blink_out to properly trigger after the expected number of ns for the parameterized counter."><img src="images/testbench2-screenshot.png" class="img-fluid figure-img"></a>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: A screenshot of a QuestaSim simulation demonstrating the blinker submodule testing whether reset and enable works and verifying we get fpga_blink_out to properly trigger after the expected number of ns for the parameterized counter.
-</figcaption>
-</figure>
-</div>
-<p>The design met all intended design objectives. <a href="#fig-testbench2" class="quarto-xref">Figure&nbsp;4</a> shows a screenshot of the QuestaSim simulation.</p>
-<div id="fig-testbench3" class="quarto-float quarto-figure quarto-figure-center anchored" data-collapse="true">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-testbench3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="images/testbench3-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;5: A screenshot of a QuestaSim simulation demonstrating the decoder submodule"><img src="images/testbench3-screenshot.png" class="img-fluid figure-img"></a>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-testbench3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: A screenshot of a QuestaSim simulation demonstrating the decoder submodule
-</figcaption>
-</figure>
-</div>
-<p>The design met all intended design objectives. <a href="#fig-testbench3" class="quarto-xref">Figure&nbsp;5</a> shows a screenshot of the QuestaSim simulation.</p>
-</section>
+<p>The overall design and construction was successful as confirmed via physical circuitry and the successful upload of the solution to the MCU. I was able to accomplish all tasks outlined in the beginning of this lab report and utilize some interesting logic that I didn’t see other peers using.</p>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>The design successfully programmed the 7-segment display and outputted the right LED logic. I learned a lot about testbenches, communication between modules, etc.</p>
+<p>The design successfully programmed the speaker to play two tunes. I learned a lot about communicating with the MCU using a reference manual and datasheet and manipulating the values of registers to essentially get a MAX COUNT.</p>
 </section>
 <section id="ai-prototype-summary" class="level2">
 <h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
 <div id="fig-aisynthesis" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-aisynthesis-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="images/aisynthesis-screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;6: A screenshot of a the synthesis of the logic the AI created."><img src="images/aisynthesis-screenshot.png" class="img-fluid figure-img"></a>
+<a href="images/ai_mcu_lab4.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: Continuation of the Prompt with File Attachment"><img src="images/ai_mcu_lab4.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-aisynthesis-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: A screenshot of a the synthesis of the logic the AI created.
+Figure&nbsp;2: Continuation of the Prompt with File Attachment
 </figcaption>
 </figure>
 </div>
-<p>It did successfully synthesize on the first go but I noticed some unusual and the variables were strangely defined. The logic and comments are extremely helpful and I can see how this can be used as a very valuable tool but I’m also not quite sure if this would be helpful since a person using this for multiple modules might be confused when communicating with other modules.</p>
-<p>Overall, however, it was extremely clean and with some polish and understanding of the AI’s logic and how to expand on it, it can be a useful basis. I think, in the end, the prompt is pretty simple to tackle and the AI is efficient at it.</p>
-<p><a href="#fig-aisynthesis" class="quarto-xref">Figure&nbsp;6</a> shows a screenshot of the synthesis.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Initial Prompt">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Initial Prompt
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Timers to Use (220 Hz to 1 kHz)The STM32L432KC includes several general-purpose and advanced timers suitable for signal and PWM generation: TIM2 (32-bit): High-precision general-purpose timer. Its 32-bit width provides a massive counting range, making low frequencies easily reachable without risk of counter overflow.TIM1 (16-bit): Advanced-control timer. Fully capable, but includes extra complex features (break inputs, dead-time) that are unnecessary for basic audio/PWM signals. TIM15 &amp; TIM16 (16-bit): General-purpose 16-bit timers. Suitable for basic signal output, though care must be taken to ensure the 16-bit limit (<span class="math inline">\(65,535\)</span>) isn’t exceeded when selecting prescaler values. 2. Best Choice &amp; Easy GPIO Pin MappingTIM2 Channel 1 mapping to PA0 (Pin A0 on the NUCLEO-L432KC board) is the best choice.Why: TIM2 is a 32-bit timer, giving you maximum resolution for calculating duty cycles and frequencies.Pin Connection: PA0 supports AF1 (Alternate Function 1) for TIM2_CH1. It breaks out cleanly on the outer headers of the Nucleo-32 board.3. Relevant FormulasOutput Frequency (<span class="math inline">\(f_{\text{PWM}}\)</span>)<span class="math display">\[f_{\text{PWM}} = \frac{f_{\text{TIMCLK}}}{(\text{PSC} + 1) \times (\text{ARR} + 1)}\]</span><span class="math inline">\(f_{\text{TIMCLK}}\)</span>: Timer input clock frequency (e.g., <span class="math inline">\(80\text{ MHz}\)</span> standard system clock).<span class="math inline">\(\text{PSC}\)</span>: Prescaler register value (<span class="math inline">\(0 \text{ to } 65,535\)</span>).<span class="math inline">\(\text{ARR}\)</span>: Auto-Reload Register value (defines the period).Duty Cycle (%)<span class="math display">\[\text{Duty Cycle} = \frac{\text{CCR1}}{\text{ARR} + 1} \times 100\%\]</span><span class="math inline">\(\text{CCR1}\)</span>: Capture/Compare Register value (controls when the pin toggles).Calculation Example (<span class="math inline">\(f_{\text{TIMCLK}} = 80\text{ MHz}\)</span>)To maintain a high counter resolution, pick a fixed Prescaler (<span class="math inline">\(\text{PSC}\)</span>) value:Set <span class="math inline">\(\text{PSC} = 79\)</span> (Divides the clock down to <span class="math inline">\(1\text{ MHz}\)</span> or <span class="math inline">\(1\mu\text{s}\)</span> per tick).For <span class="math inline">\(1000\text{ Hz}\)</span> Output:<span class="math display">\[\text{ARR} = \frac{80,000,000}{(79 + 1) \times 1000} - 1 = \frac{1,000,000}{1000} - 1 = 999\]</span>For <span class="math inline">\(220\text{ Hz}\)</span> Output:<span class="math display">\[\text{ARR} = \frac{1,000,000}{220} - 1 \approx 4544\]</span>4. Required Registers &amp; Configuration StepsTo output a hardware PWM signal on pin PA0 without CPU overhead, configure the following registers:1. Clock Enable RegistersRCC-&gt;AHB2ENR: Set bit GPIOAEN to enable the GPIOA clock.RCC-&gt;APB1ENR1: Set bit TIM2EN to enable the TIM2 peripheral clock.2. GPIO Pin Configuration (GPIOA)GPIOA-&gt;MODER: Set MODER0 to 10 (Alternate Function Mode).GPIOA-&gt;AFR[0]: Set AFSEL0 to 0001 (AF1) to select TIM2_CH1.3. Timer Configuration (TIM2)TIM2-&gt;PSC: Set to 79 (1 MHz counter clock).TIM2-&gt;ARR: Set to desired frequency target (e.g., 999 for 1 kHz, 4544 for 220 Hz).TIM2-&gt;CCR1: Set to half of ARR for a 50% square wave (e.g., 500 for 1 kHz).TIM2-&gt;CCMR1:Set OC1M bits to 0110 (PWM Mode 1: Active while CNT &lt; CCR1).Set OC1PE bit to 1 (Enable Preload register).TIM2-&gt;CCER: Set CC1E bit to 1 to enable output on Channel 1.TIM2-&gt;CR1: Set CEN bit to 1 to enable the counter.</li>
+</ol>
+</div>
+</div>
+</div>
+<p>For clarity, the prompt was as follows:</p>
+<p><em>What timers should I use on the STM32L432KC to generate frequencies ranging from 220Hz to 1kHz? What’s the best choice of timer if I want to easily connect it to a GPIO pin? What formulae are relevant, and what registers need to be set to configure them properly?</em></p>
+<p>I decided to prompt Gemini via the Harvey Mudd license (as to not train the AI) and I was presented with the “Initial Prompt” block seen above. Notably, it is comprehensive and covers a lot about timer selection and some of the information I cam across reading the manual. The AI does conclude that TIM2 is ideal for practically the same reason I described about it being 32-bit. However, it instead opts for pin A0 because it supports Alternate Function 1. I instead went the route of using GPIO B and just declaring it as a general purpose output but I can see how PA0 also makes sense and maybe even be more effective since it’s not paired with an LED and AF1 seems to be well equipped for this purpose. It also uses the same logic to enable the clock registers but has to use GPIOA-&gt;MODER and declare that as Alternate Function mode. When giving it the files, it functioned more as a table of contents with a summary rather than pointing me to specific addresses and telling me what to do about those sections. I can see why this may be helpful though.</p>
+<p><a href="#fig-aisynthesis" class="quarto-xref">Figure&nbsp;2</a> shows a screenshot of the second prompting and it seems pretty thorough as an overview if someone wanted to figure out where to go.</p>
 </section>
 <section id="resources" class="level2">
 <h2 class="anchored" data-anchor-id="resources">Resources</h2>
-<p>The source code for the project can be found in the associated <a href="https://github.com/EduardoAmbrizLazo/e155-lab1/tree/main/fpga">Github repository</a>.</p>
+<p>The source code for the project can be found in the associated <a href="https://github.com/EduardoAmbrizLazo/e155-labs/tree/main/fpga/lab2_ea/lab2_ea/source/impl_1">Github repository</a>.</p>
 
 
 </section>
